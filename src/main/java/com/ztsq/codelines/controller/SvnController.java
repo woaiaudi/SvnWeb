@@ -4,6 +4,7 @@ import com.jfinal.core.Controller;
 import com.ztsq.codelines.db.SVNAuth;
 import com.ztsq.codelines.db.SVNCommitLog;
 import com.ztsq.codelines.services.SvnServices;
+import com.ztsq.codelines.utils.RespBaseBean;
 import org.tmatesoft.svn.core.SVNLogEntry;
 
 import java.util.ArrayList;
@@ -21,6 +22,21 @@ public class SvnController extends Controller {
 
     public void index(){
         renderText("<<>><<<>>>i am SvnController<<>?<><>??");
+    }
+
+
+
+    public void auths(){
+        RespBaseBean resp = null;
+        try {
+            String searchText = getPara("searchText","");
+            List<SVNAuth> userList = SVNAuth.dao.find("SELECT * FROM svnt_auth WHERE auth like '%"+searchText+"%' ;");
+            resp = RespBaseBean.createSuccessResp(userList);
+        }catch (Exception e){
+            resp = RespBaseBean.createErrorResp(400,e.getLocalizedMessage());
+        }
+
+        renderJson(resp);
     }
 
     /**
