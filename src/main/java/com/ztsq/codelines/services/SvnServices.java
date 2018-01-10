@@ -61,12 +61,16 @@ public class SvnServices {
         }
     }
 
-    public void calcAndUpdateCodeLine(SVNLogEntry version) {
+    public List<String> calcVersionDiff(SVNLogEntry version) {
         List<String> changeDetailList = svn.diffPath(ZTSVNConstanst.path, version);
+        return changeDetailList;
 
-        //更新库里面的记录
-        SVNCommitLog commitLog = SVNCommitLog.dao.findFirst("SELECT * FROM svnt_commit_log WHERE revision_id = '"+version.getRevision()+"' ;");
-        commitLog.set("code_lines",changeDetailList.size()).update();
 
+
+    }
+
+    public int calcVersionDiffCodeLine(SVNLogEntry version){
+        List<String> changeDetailList = calcVersionDiff(version);
+        return changeDetailList.size();
     }
 }
