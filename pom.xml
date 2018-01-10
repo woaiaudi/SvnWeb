@@ -21,6 +21,13 @@
       <version>3.3</version>
     </dependency>
 
+    <!-- cors跨域 -->
+    <dependency>
+      <groupId>com.thetransactioncompany</groupId>
+      <artifactId>cors-filter</artifactId>
+      <version>2.5</version>
+    </dependency>
+
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
