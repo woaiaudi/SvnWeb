@@ -97,6 +97,7 @@ public class SvnController extends Controller {
 
         if (null == retRersionList || retRersionList.isEmpty()){
             renderJson(RespBaseBean.createErrorResp(4,"没有查询到svnName的提交记录！"));
+            svnServices.closeSvn();
             return;
         }
 
