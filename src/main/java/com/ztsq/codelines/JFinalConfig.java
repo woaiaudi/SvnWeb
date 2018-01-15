@@ -9,6 +9,7 @@ import com.ztsq.codelines.controller.SvnController;
 import com.ztsq.codelines.db.SVNAuth;
 import com.ztsq.codelines.db.SVNChangePathsLog;
 import com.ztsq.codelines.db.SVNCommitLog;
+import com.ztsq.codelines.db.SVNProject;
 
 /**
  * Created by zyuework on 2018/1/8.
@@ -34,6 +35,7 @@ public class JFinalConfig extends com.jfinal.config.JFinalConfig {
         arp.addMapping("svnt_auth", SVNAuth.class);
         arp.addMapping("svnt_commit_log", SVNCommitLog.class);
         arp.addMapping("svnt_changed_paths_log", SVNChangePathsLog.class);
+        arp.addMapping("svnt_project", SVNProject.class);
 
     }
 

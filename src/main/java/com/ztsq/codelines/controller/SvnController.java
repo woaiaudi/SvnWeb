@@ -2,19 +2,24 @@ package com.ztsq.codelines.controller;
 
 import com.jfinal.core.Controller;
 import com.ztsq.codelines.db.SVNAuth;
+import com.ztsq.codelines.db.SVNChangePathsLog;
 import com.ztsq.codelines.db.SVNCommitLog;
+import com.ztsq.codelines.db.SVNProject;
 import com.ztsq.codelines.services.SvnServices;
 import com.ztsq.codelines.utils.RespBaseBean;
+import com.ztsq.codelines.utils.ZTSVNConstanst;
 import javafx.scene.input.DataFormat;
 import org.tmatesoft.svn.core.SVNLogEntry;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.logging.SimpleFormatter;
 
 import org.apache.log4j.Logger;
+import org.tmatesoft.svn.core.SVNLogEntryPath;
+
 /**
  * Created by zyuework on 2018/1/5.
  */
@@ -22,6 +27,8 @@ public class SvnController extends Controller {
     private static Logger logger = Logger.getLogger(SvnController.class);
 
     private SvnServices svnServices = null;
+
+    private List<SVNProject> allProject;
 
 
     public void index(){
@@ -35,7 +42,7 @@ public class SvnController extends Controller {
     public void auths(){
         RespBaseBean resp = null;
         try {
-            String searchText = getPara("searchText","");
+            String searchText = (null == getPara("searchText","")?"":getPara("searchText",""));
             List<SVNAuth> userList = SVNAuth.dao.find("SELECT * FROM svnt_auth WHERE auth like '%"+searchText+"%' ;");
             resp = RespBaseBean.createSuccessResp(userList);
         }catch (Exception e){
@@ -57,9 +64,15 @@ public class SvnController extends Controller {
      * endDate: yyyy-MM-dd hh:mm:ss
      */
     public void commitLogs(){
-        String svnName = getPara("auth");
+        String svnName = (null == getPara("auth")?"":getPara("auth"));
         if (null == svnName || svnName.length()<=0){
             renderJson(RespBaseBean.createErrorResp(40,"请指定要查询的开发人员svn账号"));
+            return;
+        }
+
+        int projectId = (null == getParaToInt("projectId")?0:getParaToInt("projectId"));
+        if (projectId <= 0){
+            renderJson(RespBaseBean.createErrorResp(44,"请指定要查询的项目"));
             return;
         }
 
@@ -85,6 +98,16 @@ public class SvnController extends Controller {
         String time1 = svnkitFormatter.format(startTimeDate);
         String time2 = svnkitFormatter.format(endTimeDate);
 
+        //要查询的 项目
+        SVNProject findProject = SVNProject.dao.findFirst("SELECT id FROM svnt_project where id = '"+projectId+"' ;");
+        if (null == findProject){
+            renderJson(RespBaseBean.createErrorResp(41,"未能找到相应的项目，请先添加项目！"));
+            return;
+        }
+
+        allProject = SVNProject.dao.find("SELECT * FROM svnt_project ;");
+
+
         //调用 svnkit 获取 这个 作者 在 时间范围内的 提交记录
         List<SVNLogEntry> retRersionList = new ArrayList<SVNLogEntry>();
         try {
@@ -96,7 +119,7 @@ public class SvnController extends Controller {
         }
 
         if (null == retRersionList || retRersionList.isEmpty()){
-            renderJson(RespBaseBean.createErrorResp(4,"没有查询到svnName的提交记录！"));
+            renderJson(RespBaseBean.createErrorResp(4,"在指定时间范围内，没有查询到"+svnName+"的提交记录！"));
             svnServices.closeSvn();
             return;
         }
@@ -120,7 +143,9 @@ public class SvnController extends Controller {
                         .set("auth_id", authModel.getLong("id"))
                         .set("commit_log", item.getMessage())
                         .set("commit_time", item.getDate())
+                        .set("is_branch", 0)
                         .set("code_lines", 0)
+                        .set("project_id", 0)
                         .save();
             }catch (Exception e){
                 logger.error(e);
@@ -128,32 +153,88 @@ public class SvnController extends Controller {
             }
         }
 
+
         List<SVNCommitLog> retLogList = new ArrayList<SVNCommitLog>();
 
         for (SVNLogEntry item :retRersionList) {
             //先查询库里面 这条记录 的 codeline 是否 》0
             SVNCommitLog commitLog = SVNCommitLog.dao.findFirst("SELECT * FROM svnt_commit_log WHERE revision_id = '"+item.getRevision()+"' ;");
             if (null != commitLog){
-                int tmpCode = commitLog.getInt("code_lines");
-                if (tmpCode <= 0){
-                    //不》0 时 才更新
-                    int codeLine = svnServices.calcVersionDiffCodeLine(item);
+                //更新 是否是分支
+                Map<String,SVNLogEntryPath> changePaths = item.getChangedPaths();
+                Iterator iter = changePaths.entrySet().iterator();
+                if (changePaths.size() == 1 && iter.hasNext()){
+                    Map.Entry entry = (Map.Entry) iter.next();
+                    SVNLogEntryPath tmpValue = (SVNLogEntryPath) entry.getValue();
+                    if (changePaths.size() == 1
+                            && tmpValue.getCopyRevision() > 0
+                            && null != tmpValue.getCopyPath()
+                            && tmpValue.getCopyPath().length() > 0){
+                        //这次提交 是从 其他地方复制来的 ，可以理解为是拉分支。
+                        //此时修改 对应记录
+                        commitLog.set("is_branch",1).update();
+                    }
+                }
 
-                    //更新库里面的记录
-                    commitLog.set("code_lines",codeLine).update();
+
+                //更新 所属项目
+                int tmpProjectId = 0;
+                try {
+                    tmpProjectId = commitLog.getInt("project_id");
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+                if (tmpProjectId <= 0 ){
+
+                    //之前没有 所属项目 是 才执行更新操作
+                    SVNProject project = queryProjectIdByChange(item);
+                    if (null != project && project.getInt("id") > 0){
+                        //更新库里面的记录
+                        commitLog.set("project_id",project.getInt("id")).update();
+                    }
+                }
+
+                if (commitLog.getInt("is_branch") != 1){
+                    //不是分支的时候，才开始计算代码行数
+
+                    //更新 代码行数
+                    int tmpCode = 0;
+                    if (null != commitLog.getInt("code_lines")){
+                        tmpCode = commitLog.getInt("code_lines");
+                    }
+
+                    if (tmpCode <= 0){
+                        //不》0 时 才更新
+                        int codeLine = svnServices.calcVersionDiffCodeLine(item);
+
+                        //更新库里面的记录
+                        commitLog.set("code_lines",codeLine).update();
+                    }
                 }
             }
 
-            retLogList.add(commitLog);
+
+            //只有 是当前要 查询的项目，才返回结果
+            if (commitLog.getInt("project_id") == findProject.getInt("id")){
+                retLogList.add(commitLog);
+            }
+
         }
 
         svnServices.closeSvn();
-
 
         RespBaseBean resp = RespBaseBean.createSuccessResp(retLogList);
 
         renderJson(resp);
 
+    }
+
+    public void projects(){
+        String searchText = (null == getPara("searchText","")?"":getPara("searchText",""));
+        List<SVNProject> allProject = SVNProject.dao.find("SELECT * FROM svnt_project WHERE name like '%"+searchText+"%' OR path like '%"+searchText+"%' ;");
+        if (null == allProject) allProject = new ArrayList<SVNProject>();
+        RespBaseBean resp = RespBaseBean.createSuccessResp(allProject);
+        renderJson(resp);
     }
 
 
@@ -171,5 +252,36 @@ public class SvnController extends Controller {
         }
 
         return retCommitLog;
+    }
+
+
+    /**
+     * 从提交记录中  判断，这次提交属于哪一个项目
+     * @param logEntry
+     * @return
+     */
+    private SVNProject queryProjectIdByChange(SVNLogEntry logEntry){
+        SVNProject retProj = null;
+        Map<String,SVNLogEntryPath> changePaths = logEntry.getChangedPaths();
+
+
+        Iterator iter = changePaths.entrySet().iterator();		//获取key和value的set
+        if (iter.hasNext()){
+            Map.Entry entry = (Map.Entry) iter.next();		//把hashmap转成Iterator再迭代到entry
+            String tmpKey = (String) entry.getKey();
+            String fullPath = ZTSVNConstanst.path + tmpKey;
+
+            for (SVNProject itemProj:allProject) {
+                String itemPath = itemProj.get("path","");
+                if (fullPath.indexOf(itemPath) >= 0){
+                    //找到这个proj
+                    retProj = itemProj;
+                }
+            }
+        }
+
+        logger.debug(retProj);
+        return retProj;
+
     }
 }
