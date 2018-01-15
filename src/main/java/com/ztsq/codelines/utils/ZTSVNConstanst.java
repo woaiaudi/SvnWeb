@@ -22,4 +22,8 @@ public class ZTSVNConstanst {
 
 	//一个阈值 当修改的文件数量，超过这个值时，说明是 打分支的 ，不纳入统计
 	public static int DEV_BRANCH_CHANGE_FILE_COUNT = 200;
+
+
+	//为了性能考虑 能查询的最长天数
+	public static int DEV_MAX_DAY_4_SEARCH = 21;
 }

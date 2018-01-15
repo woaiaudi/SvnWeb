@@ -260,6 +260,7 @@ public class SvnBaseImpl extends SvnServiceImpl implements ISvn {
 			
 			SVNURL tmpSVNURL =  SVNURL.parseURIEncoded(ZTSVNConstanst.path);
 
+			// FIXME: 2018/1/15 这一句耗时最长，考虑如何优化
 			diffClient.doDiff(tmpSVNURL, endV,startV, endV, SVNDepth.INFINITY, true, os);
 
 			for (String tmpStr:os.lineList) {

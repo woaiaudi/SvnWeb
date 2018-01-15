@@ -5,6 +5,7 @@ import com.jfinal.plugin.activerecord.ActiveRecordPlugin;
 import com.jfinal.plugin.druid.DruidPlugin;
 import com.jfinal.template.Engine;
 import com.ztsq.codelines.controller.HelloController;
+import com.ztsq.codelines.controller.ProjectController;
 import com.ztsq.codelines.controller.SvnController;
 import com.ztsq.codelines.db.SVNAuth;
 import com.ztsq.codelines.db.SVNChangePathsLog;
@@ -21,7 +22,8 @@ public class JFinalConfig extends com.jfinal.config.JFinalConfig {
 
     public void configRoute(Routes routes) {
         routes.add("/Hello", HelloController.class);
-        routes.add("/svnlog", SvnController.class);
+        routes.add("/svnlog/code", SvnController.class);
+        routes.add("/svnlog/project", ProjectController.class);
     }
 
     public void configEngine(Engine engine) {

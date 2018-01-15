@@ -94,6 +94,17 @@ public class SvnController extends Controller {
             return;
         }
 
+        if (startTimeDate.getTime() >= endTimeDate.getTime()){
+            renderJson(RespBaseBean.createErrorResp(41,"开始时间不能在结束时间之后。"));
+            return;
+        }
+        long timeRangeLong = endTimeDate.getTime()-startTimeDate.getTime();
+        if (timeRangeLong > ZTSVNConstanst.DEV_MAX_DAY_4_SEARCH*24*60*60*1000){
+            renderJson(RespBaseBean.createErrorResp(41,"抱歉，时间范围最长为"+ZTSVNConstanst.DEV_MAX_DAY_4_SEARCH+"天"));
+            return;
+        }
+
+
         SimpleDateFormat svnkitFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String time1 = svnkitFormatter.format(startTimeDate);
         String time2 = svnkitFormatter.format(endTimeDate);
@@ -228,15 +239,6 @@ public class SvnController extends Controller {
         renderJson(resp);
 
     }
-
-    public void projects(){
-        String searchText = (null == getPara("searchText","")?"":getPara("searchText",""));
-        List<SVNProject> allProject = SVNProject.dao.find("SELECT * FROM svnt_project WHERE name like '%"+searchText+"%' OR path like '%"+searchText+"%' ;");
-        if (null == allProject) allProject = new ArrayList<SVNProject>();
-        RespBaseBean resp = RespBaseBean.createSuccessResp(allProject);
-        renderJson(resp);
-    }
-
 
 
     private SVNCommitLog lastLog(String authName){
