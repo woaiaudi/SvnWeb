@@ -1,6 +1,7 @@
 package com.ztsq.codelines.controller;
 
 import com.jfinal.core.Controller;
+import com.ztsq.codelines.db.SVNCommitLog;
 import com.ztsq.codelines.db.SVNProject;
 import com.ztsq.codelines.utils.RespBaseBean;
 import com.ztsq.codelines.utils.ZTSVNConstanst;
@@ -149,6 +150,31 @@ public class ProjectController extends Controller {
             renderJson(RespBaseBean.createErrorResp(43,"项目修改失败！"));
             return;
         }
+    }
+
+    public void delete(){
+        int projId = (null == getParaToInt("id")?0:getParaToInt("id"));
+        if (projId <= 0){
+            renderJson(RespBaseBean.createErrorResp(44,"请指定要删除的项目id"));
+            return;
+        }
+
+        SVNCommitLog tmpLog = SVNCommitLog.dao.findFirst("SELECT * FROM svnt_commit_log WHERE project_id = '"+projId+"' ;");
+        if (null != tmpLog){
+            renderJson(RespBaseBean.createErrorResp(45,"该项目存在提交记录，不能删除"));
+            return;
+        }
+
+
+        boolean delFlag = SVNProject.dao.deleteById(projId);
+        if (delFlag){
+            renderJson(RespBaseBean.createSuccessResp("项目删除成功！"));
+            return;
+        }else {
+            renderJson(RespBaseBean.createErrorResp(43,"项目删除失败！"));
+            return;
+        }
+
     }
 
 

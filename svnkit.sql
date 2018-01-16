@@ -61,8 +61,11 @@ CREATE TABLE `svnt_changed_paths_log` (
   `revision_id` bigint(20) DEFAULT NULL COMMENT '修改所属 的 修改id',
   `type` varchar(10) DEFAULT NULL COMMENT '修改类型：A(added) D(delete) M(modify) R(relpace)',
   `path` text COMMENT '变化文件的路径',
+  `copy_revision` bigint(20) COMMENT '拷贝版本',
+  `copy_path` text COMMENT '变化文件的路径',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COMMENT='已变化文件的列表';
+
 
 
 -- ----------------------------

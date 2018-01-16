@@ -55,6 +55,24 @@ public class SvnServices {
     }
 
 
+    /**
+     * 查询所有的日志
+     * @param startDate
+     * @param endDate
+     * @return
+     */
+    public List<SVNLogEntry> getALLLogCommitLogs( String startDate, String endDate){
+        final List<SVNLogEntry> retRersionList = new ArrayList<SVNLogEntry>();
+        svn.getCommitHistory(ZTSVNConstanst.path, startDate, endDate, "", new ISVNLogEntryHandler() {
+            public void handleLogEntry(SVNLogEntry logEntry) throws SVNException {
+                retRersionList.add(logEntry);
+            }
+        });
+
+        return retRersionList;
+    }
+
+
     public void closeSvn(){
         if (null != svn){
             svn.closeRepo();
