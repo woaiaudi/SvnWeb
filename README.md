@@ -13,6 +13,7 @@
 - [x] 查询的时间范围 从start day 00:00:00 到 end day 23:59:59
 - [x] 查询某一次提交日志中的changepaths
 - [x] 重新刷某一次提交日志中的changepaths
+- [ ] 打分支的功能，使用 svnkit SVNCopyClient
 
 
 

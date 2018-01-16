@@ -35,7 +35,7 @@ public class JFinalConfig extends com.jfinal.config.JFinalConfig {
     }
 
     public void configPlugin(Plugins plugins) {
-        DruidPlugin dp = new DruidPlugin("jdbc:mysql://192.168.2.156/ztmalaysiadb", "ztsq", "ztsq!@#123");
+        DruidPlugin dp = new DruidPlugin("jdbc:mysql://192.168.2.2/ztmalaysiadb", "ztsq", "ztsq!@#123");
         plugins.add(dp);
         ActiveRecordPlugin arp = new ActiveRecordPlugin(dp); plugins.add(arp);
         arp.addMapping("svnt_auth", SVNAuth.class);
