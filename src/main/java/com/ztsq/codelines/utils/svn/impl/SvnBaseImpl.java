@@ -245,6 +245,22 @@ public class SvnBaseImpl extends SvnServiceImpl implements ISvn {
 
 		//用于返回的 拆散的 代码数组
 		List<String> retList = new ArrayList<String>();
+
+		Map<String,SVNLogEntryPath> changePaths = ver.getChangedPaths();
+		if (changePaths.size() == 1 ){
+			Iterator iter = changePaths.entrySet().iterator();
+			if (iter.hasNext()){
+				Map.Entry entry = (Map.Entry) iter.next();
+				SVNLogEntryPath tmpValue = (SVNLogEntryPath) entry.getValue();
+				String typess = String.valueOf(tmpValue.getType()).toUpperCase();
+				if ( typess .equals("D")){
+					//删除的 不计算行数
+					return retList;
+				}
+			}
+		}
+
+
 		StrOutputStrean os = new StrOutputStrean(new ArrayList<String>());
 		try {
 			if (svnUrl == null || svnUrl.length() < 3)

@@ -106,12 +106,9 @@ public class SvnController extends Controller {
 
         //开始时间 是 start day 00:00:00
         //结束时间 是 end day 23:59:59
-        Date lastEndTimeDate = new Date(endTimeDate.getTime() + (23*59*59*1000));
 
-
-        SimpleDateFormat svnkitFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String time1 = svnkitFormatter.format(startTimeDate);
-        String time2 = svnkitFormatter.format(lastEndTimeDate);
+        String time1 = getPara("startDate")+" 00:00:00";
+        String time2 = getPara("endDate")+" 23:59:59";
 
         //要查询的 项目
         SVNProject findProject = SVNProject.dao.findFirst("SELECT id FROM svnt_project where id = '"+projectId+"' ;");
