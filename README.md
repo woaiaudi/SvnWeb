@@ -43,3 +43,14 @@
 
     http://192.168.2.156:8080/Hello/createData?startDate=2017-11-06&endDate=2017-11-13
 ```
+
+
+
+#### 使用说明
+##### 项目设置
+![](http://ogeijtkoy.bkt.clouddn.com/svn1.png)
+
+![](http://ogeijtkoy.bkt.clouddn.com/svn2.png)
+
+##### 统计代码
+![](http://ogeijtkoy.bkt.clouddn.com/svn3.png)
